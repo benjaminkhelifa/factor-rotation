@@ -1,32 +1,23 @@
-# factor-rotation
+Factor Rotation Project
 Sector rotation analysis and backtesting project (Python)
-# 🧠 Factor Rotation Project
-
 This project aims to analyze and backtest a **sector rotation strategy** using Python.
 
 The goal is to understand **when and why an investor might reallocate their portfolio across sectors**, based on quantitative indicators such as momentum, volatility, and other factors.
-
 ---
-
-## 🎯 Objective
-
+Objective
 - Collect and clean sector ETF data (free from Yahoo Finance)
 - Build financial indicators (momentum, volatility, etc.)
 - Test allocation rules through backtesting
 - Produce performance reports and visualizations
 - Automate report generation (PDF)
-
 ---
-
-## 📊 Context
-
+Context
 In financial markets, sectors do not perform equally over time.  
 Technology often outperforms during expansion phases, while healthcare and utilities are more resilient during recessions.  
 This project studies how a dynamic allocation between sectors could improve portfolio performance and reduce risk compared to a static allocation.
-
 ---
 
-## 📁 Project Structure
+## Project Structure
 factor-rotation/
 ├─ data/              # Raw and processed data
 │  ├─ raw/
@@ -39,7 +30,7 @@ factor-rotation/
 └─ README.md
 ---
 
-## ⚙️ Tools and Libraries
+##Tools and Libraries
 
 - Python (3.10+)
 - pandas, numpy, matplotlib, statsmodels, scikit-learn
@@ -48,7 +39,7 @@ factor-rotation/
 
 ---
 
-## 🧩 Methodology Overview
+##Methodology Overview
 
 1. **Data Collection** → Download historical sector ETF prices (Yahoo Finance)
 2. **Feature Engineering** → Compute financial signals (momentum, volatility, etc.)
@@ -58,7 +49,7 @@ factor-rotation/
 
 ---
 
-## 📈 Expected Outputs
+##Expected Outputs
 
 - Cleaned datasets (`data/processed/`)
 - Visualizations (performance, correlations, drawdowns)
@@ -67,9 +58,9 @@ factor-rotation/
 
 ---
 
-## 👤 Author
+##Author
 
-**Ben**  
+**Benjanin Khelifa**  
 Project start: October 2025  
 Status: **Day 1 – Structure setup ✅**
 
