@@ -62,7 +62,7 @@ factor-rotation/
 
 **Benjanin Khelifa**  
 Project start: October 2025  
-Status: **Day 1 – Structure setup ✅**
+Status: **Day 1 – Structure setup**
 
 ---
 
