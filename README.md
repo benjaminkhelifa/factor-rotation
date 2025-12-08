@@ -1,10 +1,24 @@
+# **Portfolio Rotation Engine**
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![License](https://img.shields.io/badge/License-Apache_2.0-green)
 ![Last Commit](https://img.shields.io/github/last-commit/benjaminkhelifa/factor-rotation)
 
+![hero](report/screenshots/header.png)
+
+**A systematic multi-asset analytics engine with automated PDF reporting.**
+
+The **Portfolio Rotation Engine** is a dynamic, adaptive analytics system designed to evaluate assets across equities, ETFs, crypto, and forex through a unified multi-layer signal-processing pipeline.
+
+Unlike traditional sector-rotation backtests, this engine produces **context-aware diagnostics**, **risk assessments**, **momentum structures**, and **volatility regime detection** at any frequency (daily, weekly, monthly).
+
+It automatically generates a full financial report (PDF) including metrics, visualizations, interpretations, and scenario-based insights.
+
+---
+
 ## Table of Contents
 
 - [**Portfolio Rotation Engine**](#portfolio-rotation-engine)
+  - [Table of Contents](#table-of-contents)
   - [**Core Objectives**](#core-objectives)
   - [Why This Project Matters](#why-this-project-matters)
   - [Disclaimer](#disclaimer)
@@ -31,19 +45,6 @@
   - [**Author**](#author)
   - [About the Author](#about-the-author)
 
-
-# **Portfolio Rotation Engine**
-**A systematic multi-asset analytics engine with automated PDF reporting.**
-
-![hero](report/screenshots/header.png)
-
-The **Portfolio Rotation Engine** is a dynamic, adaptive analytics system designed to evaluate assets across equities, ETFs, crypto, and forex through a unified multi-layer signal-processing pipeline.
-
-Unlike traditional sector-rotation backtests, this engine produces **context-aware diagnostics**, **risk assessments**, **momentum structures**, and **volatility regime detection** at any frequency (daily, weekly, monthly).
-
-It automatically generates a full financial report (PDF) including metrics, visualizations, interpretations, and scenario-based insights.
-
----
 
 ## **Core Objectives**
 
