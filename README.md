@@ -1,68 +1,107 @@
-Factor Rotation Project
-Sector rotation analysis and backtesting project (Python)
-This project aims to analyze and backtest a **sector rotation strategy** using Python.
+# **Portfolio Rotation Engine**
+**Dynamic Cross-Asset Analysis • Multi-Frequency Signals • Automated Financial Reporting (PDF)**
 
-The goal is to understand **when and why an investor might reallocate their portfolio across sectors**, based on quantitative indicators such as momentum, volatility, and other factors.
----
-Objective
-- Collect and clean sector ETF data (free from Yahoo Finance)
-- Build financial indicators (momentum, volatility, etc.)
-- Test allocation rules through backtesting
-- Produce performance reports and visualizations
-- Automate report generation (PDF)
----
-Context
-In financial markets, sectors do not perform equally over time.  
-Technology often outperforms during expansion phases, while healthcare and utilities are more resilient during recessions.  
-This project studies how a dynamic allocation between sectors could improve portfolio performance and reduce risk compared to a static allocation.
+The **Portfolio Rotation Engine** is a dynamic, adaptive analytics system designed to evaluate assets across equities, ETFs, crypto, and forex through a unified multi-layer signal-processing pipeline.
+
+Unlike traditional sector-rotation backtests, this engine produces **context-aware diagnostics**, **risk assessments**, **momentum structures**, and **volatility regime detection** at any frequency (daily, weekly, monthly).
+
+It automatically generates a full financial report (PDF) including metrics, visualizations, interpretations, and scenario-based insights.
+
 ---
 
+## **Core Objectives**
+
+The engine is built to:
+
+- Process heterogeneous asset classes (stocks, ETFs, crypto, forex).
+- Adapt dynamically to frequency constraints and observation depth.
+- Compute short-term and long-term indicators (returns, volatility, momentum).
+- Detect volatility regimes (subdued → turbulent).
+- Infer behavioral profiles (defensive, dynamic, speculative, high-beta…).
+- Generate a structured PDF report with charts, diagnostics, and commentary.
+- Provide stable, interpretable signals even in noisy or incomplete markets.
+
+The system remains robust under **low liquidity**, **data gaps**, **flash-crash effects**, and **young tickers with limited history**.
+
+---
+
+```md
 ## Project Structure
+
 factor-rotation/
-├─ data/              # Raw and processed data
-│  ├─ raw/
-│  └─ processed/
-├─ notebooks/         # Jupyter notebooks (EDA, modeling, backtest)
-├─ src/               # Source code (data.py, features.py, etc.)
-├─ tests/             # Unit tests
-├─ report/            # Generated figures and final report
-├─ requirements.txt   # Python dependencies
+├─ data/
+│  ├─ raw/            # User-managed inputs (e.g., enriched tickers CSV)
+│  └─ processed/      # Parquet data downloaded + cleaned by the engine
+├─ notebooks/         # Exploratory analysis, validation, prototypes
+├─ src/               # Core engine (data ingestion, indicators, profiling, report builder)
+├─ report/
+│  ├─ backtests/      # Scenario-specific stress and validation tests
+│  └─ outputs/        # Generated PDF reports
+├─ tests/             # (Reserved) future unit tests
+├─ requirements.txt
 └─ README.md
----
-
-##Tools and Libraries
-
-- Python (3.10+)
-- pandas, numpy, matplotlib, statsmodels, scikit-learn
-- yfinance (data source)
-- pytest (testing)
 
 ---
+```
+## **Methodology Overview**
 
-##Methodology Overview
+### **1. Data Ingestion**
+- Automatic download from Yahoo Finance  
+- Cleaning & resampling  
+- Frequency inference  
+- Parquet caching for reproducibility  
 
-1. **Data Collection** → Download historical sector ETF prices (Yahoo Finance)
-2. **Feature Engineering** → Compute financial signals (momentum, volatility, etc.)
-3. **Modeling** → Run rolling regressions to estimate factor exposure
-4. **Backtesting** → Simulate monthly rebalancing strategies and compare results
-5. **Reporting** → Generate performance charts, metrics, and a final PDF report
+### **2. Feature Extraction**
+- Multi-horizon returns  
+- Volatility signatures  
+- Momentum curvature (ST/LT consistency)  
+- Stress metrics (ΔReturn, Volatility Ratio, Momentum Ratio)  
+
+### **3. Profiling Engine**
+- Liquidity buckets (very_liquid → illiquid)  
+- Beta-driven and market-cap classification  
+- Dynamic vs defensive behavioral profiles  
+- Volatility regimes (subdued → turbulent)  
+
+### **4. Scenario Engine**
+- Cross-dimensional consistency checks  
+- Fallback logic when signals conflict  
+- Robustness to anomalies, jumps, and missing data  
+
+### **5. Report Generation**
+- Automated PDF including:
+  - KPI tables  
+  - Momentum & return charts  
+  - Rotation metrics  
+  - Macro-profile inference  
+  - Auto-generated commentary blocks  
 
 ---
 
-##Expected Outputs
+## **Expected Outputs**
 
-- Cleaned datasets (`data/processed/`)
-- Visualizations (performance, correlations, drawdowns)
-- Backtest results (CAGR, volatility, Sharpe ratio)
-- Automated report (`report/report.pdf`)
-
----
-
-##Author
-
-**Benjanin Khelifa**  
-Project start: October 2025  
-Status: **Day 1 – Structure setup**
+- Clean structured datasets (`data/processed/...`)
+- Diagnostic tables (returns, risk, ratios)
+- Visualizations (momentum curves, volatility regimes, long/short mismatch)
+- Fully automated analytical PDF reports
+- Stress tests & backtests under multiple scenarios
 
 ---
 
+## **Tools & Libraries**
+
+- Python 3.10+
+- pandas, numpy  
+- matplotlib  
+- yfinance  
+- reportlab  
+
+---
+
+## **Author**
+
+**Benjamin Khelifa**  
+Project start: **September 2025**  
+Scope: *Dynamic multi-asset rotation engine & analytical reporting system*
+
+---
