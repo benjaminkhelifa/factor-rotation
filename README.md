@@ -155,14 +155,11 @@ pip install -r requirements.txt
 python src/report_builder.py
 ```
 ```
-The generated PDF will appear in:
-
-```
+The generated PDF will appear in: 
 report/outputs/
-```
-
 
 ```
+
 ## **Methodology Overview**
 
 ### **1. Data Ingestion**
