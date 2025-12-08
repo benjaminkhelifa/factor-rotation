@@ -107,7 +107,9 @@ Scope: *Dynamic multi-asset rotation engine & analytical reporting system*
 ---
 
 ## How to Run the Project
-
+> This project requires **Python 3.10+**
+>
+> 
 ### 1. Clone the repository
 
 ```bash
@@ -119,8 +121,10 @@ cd factor-rotation
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate      # macOS / Linux
-# .venv\Scripts\activate       # Windows
+# macOS / Linux
+source .venv/bin/activate
+# Windows activation
+.\venv\Scripts\activate
 ```
 
 ### 3. Install dependencies
