@@ -226,7 +226,7 @@ Scope: *Dynamic multi-asset rotation engine & analytical reporting system*
 ---
 ## About the Author
 
-My name is **Benjamin Khelifa**, a financial analyst specialized in
+My name is **Benjamin Khelifa**, I'm a financial analyst specialized in
 data-driven workflows, quantitative indicators, and automated reporting
 systems.
 
