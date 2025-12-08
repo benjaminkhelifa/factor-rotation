@@ -33,7 +33,9 @@
 
 
 # **Portfolio Rotation Engine**
-**Dynamic Cross-Asset Analysis • Multi-Frequency Signals • Automated Financial Reporting (PDF)**
+**A systematic multi-asset analytics engine with automated PDF reporting.**
+
+![hero](report/screenshots/header.png)
 
 The **Portfolio Rotation Engine** is a dynamic, adaptive analytics system designed to evaluate assets across equities, ETFs, crypto, and forex through a unified multi-layer signal-processing pipeline.
 
