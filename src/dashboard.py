@@ -2259,7 +2259,7 @@ list_summary_LT = [headers_wrapped_LT] + summary_reset_LT.values.tolist()
 
 
 
-doc = SimpleDocTemplate("/Users/benjaminvissac/Documents/GitHub/factor-rotation/report/"+report_name, pagesize=(portrait(A4)),
+doc = SimpleDocTemplate("/Users/benjaminvissac/Documents/GitHub/factor-rotation/report/outputs"+report_name, pagesize=(portrait(A4)),
                         leftMargin=1*cm, rightMargin=1*cm,
                         topMargin=0.5*cm, bottomMargin=0.5*cm)
 

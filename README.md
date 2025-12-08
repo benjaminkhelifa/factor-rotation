@@ -105,3 +105,38 @@ Project start: **September 2025**
 Scope: *Dynamic multi-asset rotation engine & analytical reporting system*
 
 ---
+
+## How to Run the Project
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/benjaminkhelifa/factor-rotation.git
+cd factor-rotation
+```
+
+### 2. Create a virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate      # macOS / Linux
+# .venv\Scripts\activate       # Windows
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Generate a report
+
+```bash
+python src/report_builder.py
+```
+
+The generated PDF will appear in:
+
+```
+report/outputs/
+```
