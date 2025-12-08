@@ -1,22 +1,44 @@
 # =====================================================
 # === IMPORTS & INITIAL SETTINGS
 # =====================================================
-import pandas as pd
-import matplotlib.pyplot as plt
-from reportlab.lib.pagesizes import A4, portrait
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, TableStyle, KeepTogether, LongTable, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+import os
+import re
+import time
 from datetime import date, datetime
 from textwrap import fill
-import io
-import re
-import numpy as np
-from reportlab.lib import colors
-import time
-plt.style.use("seaborn-v0_8")
 
+import io
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.lib.pagesizes import A4, portrait
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Image,
+    Table,
+    TableStyle,
+    KeepTogether,
+    LongTable,
+    Spacer,
+)
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data", "processed")
+RAW_DIR = os.path.join(BASE_DIR, "data", "raw")
+REPORT_DIR = os.path.join(BASE_DIR, "report", "outputs")
+
+os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(RAW_DIR, exist_ok=True)
+os.makedirs(REPORT_DIR, exist_ok=True)
+
+plt.style.use("seaborn-v0_8")
 start_time = time.time()
 
 def normalize_fx_ticker(t):
@@ -33,14 +55,13 @@ def apply_floor(x, min_val=0.1):
 
 def format_profile_text(sentences):
     coverage, biases, structural, others = [], [], [], []
-    seen = set()  # pour dédupliquer
+    seen = set()
 
     for s in sentences:
         text = s.lower()
         if text in seen:
-            continue  # déjà classé ailleurs
+            continue
 
-        # --- hiérarchie stricte de priorité ---
         if any(k in text for k in [
             "coverage", "diversification", "concentrated", "single-sector",
             "broad diversification", "broad balance", "multi-balanced"
@@ -117,7 +138,7 @@ def macro_profile_comment(meta_used, profiles_df=None):
     sentences = []
 
     # =========================
-    # A. Diversification sectorielle
+    # A. Diversification
     # =========================
     all_sectors = {
         "Communication Services", "Consumer Discretionary", "Consumer Staples", "Energy",
@@ -166,7 +187,7 @@ def macro_profile_comment(meta_used, profiles_df=None):
         if inflation & missing:
             sentences.append("No inflation hedge: absence of commodity-related sectors.")
 
-    # Biais implicites par présence (inchangé)
+    # Bias
     if {"Information Technology", "Communication Services", "Consumer Discretionary"} <= present:
         sentences.append("Growth-oriented bias: portfolio sensitive to long-duration assets.")
     if {"Energy", "Materials", "Financials", "Industrials"} <= present:
@@ -179,7 +200,7 @@ def macro_profile_comment(meta_used, profiles_df=None):
         sentences.append("Inflation-sensitive bias: protection against rising prices but higher volatility.")
 
     # =========================
-    # B. Enrichissements structurels depuis vol_profiles.parquet
+    # for vol_profiles.parquet
     # =========================
     dfp = None
     if profiles_df is not None and not profiles_df.empty:
@@ -204,7 +225,7 @@ def macro_profile_comment(meta_used, profiles_df=None):
         max_share = max(shares.values()) if shares else 0
         dominant = max(shares, key=shares.get) if shares else None
 
-        # 1 Concentration extrême
+        # 1 Extreme Concentration
         if max_share >= 0.65:
             if dominant == "mega":
                 msg = "Concentration risk: portfolio heavily dominated by mega caps, with limited diversification."
@@ -226,7 +247,7 @@ def macro_profile_comment(meta_used, profiles_df=None):
                 msg = "Small/micro-cap tilt: higher idiosyncratic risk with stronger convexity to cycles."
             sentences.append(msg)
 
-        # 3 Multi-balanced (>= 3 tailles >= 20 %)
+        # 3 Multi-balanced (>= 3 sizes >= 20 %)
         elif sum(v >= 0.20 for v in shares.values()) >= 3:
             sentences.append("Broad balance across market capitalizations: diversification achieved across the size spectrum.")
 
@@ -249,12 +270,11 @@ def macro_profile_comment(meta_used, profiles_df=None):
                 msg = f"Barbell structure between {combo[0]} and {combo[1]} caps."
             sentences.append(msg)
 
-        # 5️⃣ Aucun pattern clair
         else:
             sentences.append("Size distribution neutral: no dominant capitalization pattern detected.")
 
     # =========================
-    # Asset Type Mix (version enrichie)
+    # Asset Type Mix
     # =========================
     if dfp is not None and "Asset_Type" in dfp.columns:
         at = dfp["Asset_Type"].dropna().str.lower().value_counts(normalize=True)
@@ -262,21 +282,21 @@ def macro_profile_comment(meta_used, profiles_df=None):
         max_share = max(shares.values()) if shares else 0
         dominant = max(shares, key=shares.get) if shares else None
 
-        # 1️⃣ Concentration extrême
+        # 1 Concentration 
         if max_share >= 0.65:
             msg = f"Concentration risk: portfolio heavily exposed to {dominant.replace('_',' ')} instruments."
             sentences.append(msg)
 
-        # 2️⃣ Tilt dominant
+        # 2 Tilt dominant
         elif max_share >= 0.50:
             msg = f"{dominant.replace('_',' ').capitalize()} tilt: exposure primarily driven by {dominant.replace('_',' ')} dynamics."
             sentences.append(msg)
 
-        # 3️⃣ Multi-asset balanced
+        # 3 Multi-asset balanced
         elif sum(v >= 0.15 for v in shares.values()) >= 3:
             sentences.append("Multi-asset balance achieved: portfolio diversified across major asset classes.")
 
-        # 4️⃣ Barbell (mix binaire)
+        # 4 Barbell
         elif sum(v >= 0.25 for v in shares.values()) == 2:
             combo = [k for k, v in shares.items() if v >= 0.25]
             if set(combo) == {"equity", "bond"} or set(combo) == {"stock", "bond"}:
@@ -293,7 +313,7 @@ def macro_profile_comment(meta_used, profiles_df=None):
                 msg = f"Dual-structure exposure: balanced mix of {combo[0]} and {combo[1]} instruments."
             sentences.append(msg)
 
-        # 5️⃣ Aucun pattern clair
+
         else:
             sentences.append("Heterogeneous asset-type mix: no dominant class detected.")
     
@@ -305,7 +325,7 @@ def macro_profile_comment(meta_used, profiles_df=None):
         liquid = ll.get("very_liquid", 0) + ll.get("liquid", 0)
         thin   = ll.get("thin", 0) + ll.get("illiquid", 0)
 
-    # Cas 1️⃣ : nette domination de la liquidité
+    # Cas 1: nette domination de la liquidité
     if liquid >= 0.60 and thin <= 0.25:
         liq_note.append("ample trading liquidity overall")
     elif thin >= 0.40:
@@ -527,9 +547,7 @@ def label_momentum(value, series, freq_label):
     else:               return "accelerating+"
 
 def kpi_labels(summary, freq_label):
-    df_profiles = pd.read_parquet(
-        "/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/vol_profiles.parquet"
-    ).set_index("Ticker")
+    df_profiles = pd.read_parquet(os.path.join(DATA_DIR, "vol_profiles.parquet")).set_index("Ticker")
 
     R_series = summary["AvgReturn(%)"]
     M_series = summary["Momentum(%)"]
@@ -646,7 +664,7 @@ def generate_commentary(row):
     return f"{trend}, {sig}, {vol}, {liq_txt}."
 
 def interpret_ratios(row):
-    df_profiles = pd.read_parquet("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/vol_profiles.parquet").set_index("Ticker")
+    df_profiles = pd.read_parquet(os.path.join(DATA_DIR, "vol_profiles.parquet")).set_index("Ticker")
     asset = df_profiles.loc[ticker, "Asset_Type"] if ticker in df_profiles.index else "unknown"
     beta_label = df_profiles.loc[ticker, "Beta"] if ticker in df_profiles.index else "unknown"
     liq_label = df_profiles.loc[ticker, "Liquidity_Label"] if ticker in df_profiles.index else "unknown"
@@ -966,14 +984,15 @@ pie_buffer = io.BytesIO()
 
 report_name = f"financial_report_{date.today().isoformat()}.pdf"
 
-df_all = pd.read_parquet("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/sectors.parquet")
+
+df_all = pd.read_parquet(os.path.join(DATA_DIR, "sectors.parquet"))
 df_all["Ticker"] = df_all["Ticker"].map(normalize_fx_ticker)
 
 # ==============================
 # === GARDE-FOU NA ABSOLU    ===
 # ==============================
 
-print("\n🔍 Running RAW NA integrity check...")
+print("\nRunning RAW NA integrity check...")
 
 # 1. Ratios globaux
 na_global = df_all.isna().mean() * 100
@@ -983,7 +1002,7 @@ print(na_global)
 # 2. Ratios par ticker
 na_by_ticker = (
     df_all
-    .set_index("Ticker")      # on sort Ticker des colonnes pour éviter l’ambiguïté
+    .set_index("Ticker")  
     .groupby(level=0)
     .apply(lambda g: g.isna().mean() * 100)
 )
@@ -994,7 +1013,7 @@ print(na_by_ticker)
 critically_empty = na_by_ticker[na_by_ticker["Close"] == 100].index.tolist()
 if critically_empty:
     raise ValueError(
-        f"❌ FATAL DATA ERROR: The following tickers have 100% missing data "
+        f"FATAL DATA ERROR: The following tickers have 100% missing data "
         f"for 'Close' and cannot be processed: {critically_empty}"
     )
 
@@ -1002,15 +1021,15 @@ if critically_empty:
 high_na = na_by_ticker[na_by_ticker["Close"] > 60].index.tolist()
 if high_na:
     print(
-        f"\n⚠️ WARNING: These tickers have more than 60% missing 'Close' data: {high_na}.\n"
+        f"\nWARNING: These tickers have more than 60% missing 'Close' data: {high_na}.\n"
         f"This may affect long-term momentum / volatility reliability."
     )
 
-print("✅ RAW NA integrity check passed.\n")
+print("RAW NA integrity check passed.\n")
 
 # 1. Vérifie que l'index est bien Date-like
 if not isinstance(df_all.index, pd.DatetimeIndex):
-    raise ValueError("❌ Le parquet doit avoir un DatetimeIndex en index (Date).")
+    raise ValueError("parquet file should have DatetimeIndex in index (Date).")
 
 # 2. On remet Date en colonne pour la suite du code
 df_all = df_all.reset_index().rename(columns={"index": "Date"})
@@ -1042,7 +1061,7 @@ df_all["Return"]  = df_all["log_ret"] * 100
 
 
 
-# suppose que `dates` est un DatetimeIndex ou une séquence de timestamps triés
+
 freq = pd.infer_freq(di) if len(di) >= 3 else None
 
 if freq is None:
@@ -1050,21 +1069,21 @@ if freq is None:
     med = int(deltas.median()) if len(deltas) else None
     if med is None:
         freq_label = "Unknown interval"
-    elif med == 1:  # NEW → quotidien
+    elif med == 1: 
         freq_label = "Daily"
     elif 5 <= med <= 9:
         freq_label = "Weekly"
     elif 25 <= med <= 35:
         freq_label = "Monthly"
-    elif 360 <= med <= 370:  # NEW → annuel (365 ± marge)
+    elif 360 <= med <= 370:  
         freq_label = "Yearly"
     else:
         freq_label = f"every {med} days"
 else:
     # Normalisation lisible des alias Pandas
-    if freq.startswith(("A-", "AS-", "Y", "YS")):   # NEW → ex: A-DEC, AS-JAN
+    if freq.startswith(("A-", "AS-", "Y", "YS")):   
         freq_label = "Yearly"
-    elif freq in ("D", "B"):                        # NEW → D: quotidien, B: jours ouvrés
+    elif freq in ("D", "B"):                       
         freq_label = "Daily" if freq == "D" else "Business daily"
     elif freq.startswith(("W-", "W")):
         freq_label = "Weekly"
@@ -1090,7 +1109,7 @@ def check_data_depth(freq_label, n_points_disp):
     elif "year" in f:
         min_ct, min_lt = 5, 8
     else:
-        min_ct, min_lt = 30, 60  # fallback sécurité
+        min_ct, min_lt = 30, 60 
 
     ct_ok = n_points_disp >= min_ct
     lt_ok = n_points_disp >= min_lt
@@ -1119,9 +1138,9 @@ else:
 
 
 # === Fenêtres distinctes et économiquement cohérentes ===
-window_vol     = max(3, min(int(n_points_disp * 0.10), base_window * 2))  # très réactif
-window_return  = max(3, min(int(n_points_disp * 0.20), base_window * 3))  # comportement moyen
-window_momentum= max(3, min(int(n_points_disp * 0.30), base_window * 4))  # tendance persistante
+window_vol     = max(3, min(int(n_points_disp * 0.10), base_window * 2))  
+window_return  = max(3, min(int(n_points_disp * 0.20), base_window * 3))  
+window_momentum= max(3, min(int(n_points_disp * 0.30), base_window * 4))  
 # === Fenêtres long terme (plus lisses) ===
 window_vol_L      = int(window_vol * 2.5)
 window_return_L   = int(window_return * 2)
@@ -1233,7 +1252,7 @@ df_all["Return_window(%)"] = (np.exp(df_all["log_sum_w"] / window_return) - 1) *
 
 # === Fenêtre d'affichage appliquée après les calculs ===
 df_display = df_all.loc[mask_display].copy()
-df_all.to_parquet("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/df_all.parquet")
+df_all.to_parquet(os.path.join(DATA_DIR, "df_all.parquet"))
 
 # Calculer le nombre de tickers présnts dans le parquet 
 corr_tickers = df_display["Ticker"].unique()
@@ -1300,21 +1319,18 @@ if bad_tickers:
 
 
 def correlation_comment(corr_matrix):
-    """
-    Génère un commentaire enrichi sur la corrélation intersectorielle
-    à partir de la matrice complète (DataFrame de corrélations).
-    """
+
     # --- Sécurité
     if corr_matrix.empty:
         return "Correlation matrix could not be computed due to missing data."
 
-    # ✅ Corrige le problème d’index nommé
+    #  Corrige le problème d’index nommé
     corr_matrix = corr_matrix.copy()
     corr_matrix.index.name = None
     corr_matrix.columns.name = None
 
     # --- Statistiques globales
-    avg_corr = corr_matrix.replace(1.0, np.nan).mean().mean()  # moyenne hors diagonale
+    avg_corr = corr_matrix.replace(1.0, np.nan).mean().mean()  
     min_corr = corr_matrix.min().min()
     max_corr = corr_matrix[corr_matrix < 1].max().max()
     spread = max_corr - min_corr
@@ -1380,9 +1396,9 @@ def last_valid(x: pd.Series):
 
 summary = (
     df_display.groupby("Ticker").agg({
-        "Return_window(%)":             last_valid,  # return court terme (moyenne par période)
-        "Volatility(%)":                last_valid,  # niveau actuel
-        "Momentum(%)":                  last_valid,  # niveau actuel
+        "Return_window(%)":             last_valid,  
+        "Volatility(%)":                last_valid,  
+        "Momentum(%)":                  last_valid,  
         "Return_window_LT(%)":          last_valid,
         "Volatility_LT(%)":             last_valid,
         "Momentum_LT(%)":               last_valid,       
@@ -1408,8 +1424,7 @@ summary.rename(columns={
 # =====================================================
 # === VOLATILITY PROFILES IMPORT (from parquet)
 # =====================================================
-profiles_path = "/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/vol_profiles.parquet"
-
+profiles_path = os.path.join(DATA_DIR, "vol_profiles.parquet")
 # Lecture du parquet généré dans data.py
 df_profiles = pd.read_parquet(profiles_path).set_index("Ticker")
 df_profiles.index = df_profiles.index.map(normalize_fx_ticker)
@@ -1609,8 +1624,7 @@ def _ct_label_momentum_abs(M, freq_label: str, asset_type: str):
     return "bullish_strong"
 
 def _ct_add_labels(s: pd.DataFrame, freq_label: str) -> pd.DataFrame:
-    df_profiles = pd.read_parquet("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/vol_profiles.parquet" ).set_index("Ticker")
-
+    df_profiles = pd.read_parquet(os.path.join(DATA_DIR, "vol_profiles.parquet")).set_index("Ticker")
     s = s.copy()
     for col in ["AvgReturn(%)","Momentum(%)","Volatility(%)"]:
         if col not in s:
@@ -1822,7 +1836,7 @@ def build_ct_commentary(summary: pd.DataFrame,
                         profiles_df: pd.DataFrame = None):
     S = _ct_attach_profiles(summary, profiles_df) if profiles_df is not None else summary
     S = _ct_add_labels(S, freq_label)
-    S.to_csv("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/scenario.csv")
+    S.to_csv(os.path.join(DATA_DIR, "scenario.csv"), index=False)
     buckets = {"🔴": {}, "🟠": {}, "🟢": {}}
     for ticker, row in S.iterrows():
         key, R_ann, M_ann, V_ann = _ct_decide_scenario(row)
@@ -1880,21 +1894,14 @@ R_val, M_val, V_val, R_lab, M_lab, V_lab = kpi_labels(summary, freq_label)
 
 
 
-meta= pd.read_csv("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/raw/constituents.csv")
+
+meta = pd.read_csv(os.path.join(RAW_DIR, "constituents.csv"))
 tickers_used = list(summary.index.astype(str))
 tickers_used.sort()
 tickers_str = ", ".join(tickers_used)
 meta_used = meta[meta["Symbol"].isin(tickers_used)][["Symbol", "Security", "GICS Sector"]]
 
-meta= pd.read_csv("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/raw/constituents.csv")
-
-tickers_used = list(summary.index.astype(str))
-tickers_used.sort()
-tickers_str = ", ".join(tickers_used)
-
-meta_used = meta[meta["Symbol"].isin(tickers_used)][["Symbol", "Security", "GICS Sector"]]
-
-# 🔍 === VÉRIFICATION : tous les tickers sont bien dans constituents.csv ===
+#  VÉRIFICATION : tous les tickers sont bien dans constituents.csv 
 missing_meta = set(summary.index.astype(str)) - set(meta["Symbol"].astype(str).unique())
 if missing_meta:
     raise ValueError(
@@ -1924,7 +1931,7 @@ def df_pairs_to_list(df, label="Correlation"):
     rows = [["Pair", label]]
     for _, row in df.iterrows():
         pair = f"{row['A']} / {row['B']}"
-        corr = round(float(row['corr']), 2)   # 🔥 conversion numeric obligatoire !
+        corr = round(float(row['corr']), 2) 
         rows.append([pair, corr])
     return rows
 
@@ -1989,12 +1996,12 @@ else:
 threshold = 12
 if n_tickers <= threshold:
     buffer = io.BytesIO()
-# === 1) Construire la grille selon le cas ===
+
     if corr_matrix is None:
-        # 1 ticker → figure 3 graphs (1x3 ou 2x2 masqué)
+
         fig, axes = plt.subplots(2, 2, figsize=(12, 8), constrained_layout=True)
         axes = axes.ravel()
-        axes[3].remove()   # <— supprime l’axe au lieu de juste le masquer
+        axes[3].remove()   
     else:
         fig, axes = plt.subplots(2, 2, figsize=(12, 8), constrained_layout=True)
         axes = axes.ravel()
@@ -2087,7 +2094,7 @@ else:
     img_vol.hAlign = "CENTER"
     img_mom = Image(buf_mom, width=w, height=h)
     img_mom.hAlign = "CENTER"
-        # === Figure 4 : Correlation Matrix ===
+
     if corr_matrix is not None:
         img_corr = Image(buf_corr, width=w_m, height=w_m)
         img_corr.hAlign = "CENTER"
@@ -2099,15 +2106,15 @@ else:
 fig_pie, ax_pie = plt.subplots(figsize=(10, 5))
 
 n = len(sector_pct)
-palette = plt.colormaps.get_cmap("tab20")(np.linspace(0, 1, n))  # ou "Set3", "nipy_spectral", "hsv" selon ton goût
+palette = plt.colormaps.get_cmap("tab20")(np.linspace(0, 1, n))  
 
 # On affiche les pourcentages à l’intérieur du camembert
 wedges, texts, autotexts = ax_pie.pie(
     sector_pct,
-    autopct="%1.1f%%",        # ← Pourcentages clairs à une décimale
+    autopct="%1.1f%%",     
     startangle=90,
     colors=palette,
-    textprops={"fontsize": 12, "color": "white"}  # ← Texte blanc lisible sur fond coloré
+    textprops={"fontsize": 12, "color": "white"} 
 )
 
 # Légende à droite
@@ -2161,7 +2168,7 @@ header_style = ParagraphStyle(
     fontName="Helvetica-Bold",
     fontSize=9,
     leading=11,
-    alignment=1,  # centré
+    alignment=1,  
     textColor=colors.black,
     wordWrap='LTR'
 )
@@ -2169,18 +2176,18 @@ header_style = ParagraphStyle(
 num_style = ParagraphStyle(
     name="num_style",
     fontName="Helvetica-Bold",
-    fontSize=13,   # ✅ taille plus grande (lisible, élégante)
+    fontSize=13,  
     leading=25,
-    alignment=1,   # centré
+    alignment=1,  
     textColor=colors.black
 )
 
 num_style_2 = ParagraphStyle(
     name="num_style_2",
     fontName="Helvetica-Bold",
-    fontSize=10,   # ✅ taille plus grande (lisible, élégante)
+    fontSize=10,   
     leading=25,
-    alignment=1,   # centré
+    alignment=1, 
     textColor=colors.black
 )
 # --- Sélection et renommage ---
@@ -2223,7 +2230,7 @@ summary_display_LT = summary_display_LT.rename(columns={
 })
 
 
-# --- Applique les styles (⚠️ une seule fois) ---
+
 def style_table_cells(df):
     df_styled = df.copy()
     for col in df_styled.columns:
@@ -2244,24 +2251,25 @@ def style_table_cells(df):
 
 styled_summary = style_table_cells(summary_display)
 styled_summary_LT = style_table_cells(summary_display_LT)
-# --- En-têtes centrés ---
+
 summary_reset = styled_summary.reset_index()
 summary_reset_LT = styled_summary_LT.reset_index()
 headers_wrapped = [Paragraph(str(col), header_style) for col in summary_reset.columns]
 headers_wrapped_LT = [Paragraph(str(col), header_style) for col in summary_reset_LT.columns]
-# --- Liste finale ---
+
 list_summary = [headers_wrapped] + summary_reset.values.tolist()
 list_summary_LT = [headers_wrapped_LT] + summary_reset_LT.values.tolist()
 
 
 
-
-
-
-
-doc = SimpleDocTemplate("/Users/benjaminvissac/Documents/GitHub/factor-rotation/report/outputs"+report_name, pagesize=(portrait(A4)),
-                        leftMargin=1*cm, rightMargin=1*cm,
-                        topMargin=0.5*cm, bottomMargin=0.5*cm)
+doc = SimpleDocTemplate(
+    os.path.join(REPORT_DIR, report_name),
+    pagesize=portrait(A4),
+    leftMargin=1 * cm,
+    rightMargin=1 * cm,
+    topMargin=0.5 * cm,
+    bottomMargin=0.5 * cm,
+)
 
 styles = getSampleStyleSheet()
 styleTitre = ParagraphStyle(
@@ -2297,23 +2305,23 @@ styleSection = ParagraphStyle(
 )
 styleSubSection = ParagraphStyle(
     "SubSectionHeader",
-    parent=styleSection,        # hérite du style parent pour cohérence
-    fontSize=11.5,              # un peu plus petit
-    leading=14,                 # interligne ajusté
-    textColor=colors.HexColor("#006699"),  # bleu légèrement plus clair
-    spaceBefore=12,             # un peu moins d’espace au-dessus
-    spaceAfter=4,               # plus compact
-    leftIndent=0.3*cm,          # léger retrait pour signaler le niveau inférieur
+    parent=styleSection,      
+    fontSize=11.5,         
+    leading=14,             
+    textColor=colors.HexColor("#006699"), 
+    spaceBefore=12,          
+    spaceAfter=4,        
+    leftIndent=0.3*cm,        
 )
 styleSubSection_page1 = ParagraphStyle(
     "SubSectionHeader",
-    parent=styleSection,        # hérite du style parent pour cohérence
-    fontSize=11.5,              # un peu plus petit
-    leading=14,                 # interligne ajusté
-    textColor=colors.HexColor("#006699"),  # bleu légèrement plus clair
-    spaceBefore=0,             # un peu moins d’espace au-dessus
-    spaceAfter=4,               # plus compact
-    leftIndent=0.3*cm,          # léger retrait pour signaler le niveau inférieur
+    parent=styleSection,    
+    fontSize=11.5,     
+    leading=14,             
+    textColor=colors.HexColor("#006699"), 
+    spaceBefore=0,            
+    spaceAfter=4,            
+    leftIndent=0.3*cm,          
 )
 styleComment = ParagraphStyle(
     "Commentaire",
@@ -2333,12 +2341,11 @@ styleComment_Page1 = ParagraphStyle(
     spaceBefore=6,
     leftIndent=0.5*cm
 )
-# === Build CT scenario commentary blocks (needs styles) ===
 ct_blocks = build_ct_commentary(
     summary, freq_label, styleSubSection, styleNormal, profiles_df=df_profiles
 )
 
-# 1️⃣ Définition du style de base sous forme de liste
+#  Définition du style de base sous forme de liste
 base_style = [
     ('GRID', (0,0), (-1,-1), 0.25, colors.grey),
     ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#eaeaea")),  # en-tête
@@ -2346,7 +2353,7 @@ base_style = [
     ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
 ]
 
-# 2️⃣ Application du zébrage clair sur les lignes de données
+#  Application du zébrage clair sur les lignes de données
 for i in range(1, len(list_summary)):
     if i % 2 == 0:
         bg_color = colors.white
@@ -2354,7 +2361,7 @@ for i in range(1, len(list_summary)):
         bg_color = colors.HexColor("#f9f9f9")
     base_style.append(('BACKGROUND', (0, i), (-1, i), bg_color))
 
-# 3️⃣ Création finale du TableStyle
+#  Création finale du TableStyle
 table_style = TableStyle(base_style)
     
 # Tableau sans bordures, deux colonnes équilibrées
@@ -2422,7 +2429,7 @@ if too_long:
     )
 
 
-# Tableau descriptif mis à jour
+
 method_rows = [
     ["Date of extraction", datetime.now().strftime("%Y-%m-%d %H:%M")],
     ["Data window", f"{start_str} → {end_str}"],
@@ -2511,7 +2518,7 @@ combined_tables.setStyle(TableStyle([
     ("BOTTOMPADDING", (0,0), (-1,-1), 2),
 ]))
 
-# Titre supplémentaire si applicable
+
 if show_bottom:
     b_table1 = Table(list_bottom_returns, colWidths=[3*cm]*len(list_top_returns[0]))
     b_table2 =Table(list_bottom_vol, colWidths=[3*cm]*len(list_top_vol[0]))
@@ -2555,12 +2562,12 @@ if show_bottom:
 n_assets = len(corr_matrix.columns)
 total_pairs = n_assets * (n_assets - 1) / 2
 
-# Percentages
+
 p_pos     = round(100 * len(df_pos)     / total_pairs, 1)
 p_neutral = round(100 * len(df_neutral) / total_pairs, 1)
 p_neg     = round(100 * len(df_neg)     / total_pairs, 1)
 
-# Safe converter
+
 def _safe_pairs_list(df, top_n):
     if len(df) >= 1:
         return df_pairs_to_list(df.head(top_n))
@@ -2568,7 +2575,7 @@ def _safe_pairs_list(df, top_n):
         return [["Pair", "Correlation"], ["No data", ""]]
 
 
-# Build internal tables
+
 table_pos     = Table(_safe_pairs_list(df_pos,     top_n), colWidths=[3*cm, 2.5*cm])
 table_neutral = Table(_safe_pairs_list(df_neutral, top_n), colWidths=[3*cm, 2.5*cm])
 table_neg     = Table(_safe_pairs_list(df_neg,     top_n), colWidths=[3*cm, 2.5*cm])
@@ -2587,7 +2594,6 @@ for t in (table_pos, table_neutral, table_neg):
     t._argW = [2.8*cm for _ in t._argW]
 
 
-# ===== Build column titles and tables dynamically =====
 
 titles = []
 tables = []
@@ -2611,13 +2617,11 @@ if len(df_neg) >= 1:
     tables.append(table_neg)
 
 
-# If no category at all (extremely unlikely), show a message
 if len(titles) == 0:
     titles = [Paragraph("<b>No correlation data available</b>", title_style)]
     tables = [Paragraph("Correlation matrix empty.", styleNormal)]
 
 
-# ===== Final combined table =====
 
 combined_corr_tables = Table(
     [titles, tables],
@@ -2718,15 +2722,15 @@ story = [
     Spacer(1, 0.5*cm),
     img_pie,
 
-    macro_profile_block,          # PLUS JAMAIS COUPÉ
+    macro_profile_block,    
 
-    graphs_block,                 # Titre + graphes ensemble
-    *corr_block,                  # Matrice + texte + tables ensemble
+    graphs_block,              
+    *corr_block,                  
 
-    *kpi_block                    # KPI section proprement scindée
+    *kpi_block             
 ]
 
 doc.build(story)
 
 end_time = time.time()
-print(f"⏱ Temps total : {end_time - start_time:.2f} secondes")
+print(f"⏱ Total time: {end_time - start_time:.2f} seconds")

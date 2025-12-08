@@ -4,21 +4,26 @@ import numpy as np
 from tqdm import tqdm
 import re
 from datetime import timedelta
+import os
 
-# --- Fenêtre d'affichage (saisie utilisateur)
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+OUTPUT_DIR = os.path.join(BASE_DIR, "data", "processed")
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# --- WHERE YOU CHOOSE YOUR SETTINGS
 tickers = [
-    "SPY",     # US - S&P 500 ETF
-    "QQQ",     # US - Nasdaq 100 ETF
-    "ORA.PA",  # EU - Orange (France)
-    "SAP.DE",  # EU - SAP (Germany)
-    "7203.T",  # JP - Toyota (Japan)
-    "6758.T"   # JP - Sony (Japan)
+    "XLK",   # Technology Select Sector SPDR Fund
+    "XLF",   # Financial Select Sector SPDR Fund
+    "XLE",   # Energy Select Sector SPDR Fund
+    "XLY",   # Consumer Discretionary Select Sector SPDR Fund
+    "XLV",   # Health Care Select Sector SPDR Fund
+    "XLI",   # Industrial Select Sector SPDR Fund
     ]
-start_display = pd.Timestamp("2020-01-01")
-end_display   = pd.Timestamp("2024-10-22")
-interval = "1wk"
+start_display = pd.Timestamp("2025-09-15")
+end_display   = pd.Timestamp("2025-12-01")
+interval = "1D"
 
-# --- Fenêtres CT “indicatives” selon la fréquence (mêmes bases que ton code)
 if "d" in interval.lower():
     base_window = 20
 elif "wk" in interval.lower():
@@ -32,11 +37,11 @@ def back_business_days(start_date, n_days):
     """
     Recule de n jours ouvrés (business days), exactement comme Yahoo.
     """
-    dates = pd.bdate_range(end=start_date, periods=n_days+1)  # +1 pour inclure start_date
+    dates = pd.bdate_range(end=start_date, periods=n_days+1)
     return dates[0]
 
 def infer_freq_from_interval(interval: str):
-    # Exemples d’inputs possibles : "1d", "5d", "1wk", "2mo", "3y"
+
     m = re.match(r"(\d+)([a-zA-Z]+)", interval.lower().strip())
     if not m:
         return "W"  # fallback
@@ -56,14 +61,14 @@ freq = infer_freq_from_interval(interval)
 n_points = len(pd.date_range(start_display, end_display, freq=freq))
 
 
-window_momentum= max(3, min(int(n_points * 0.30), base_window * 4))  # tendance persistante
+window_momentum= max(3, min(int(n_points * 0.30), base_window * 4))
 window_momentum_L = int(window_momentum * 5)
 
-# --- Conversion dynamique en nombre de jours à reculer (selon interval)
+
 if "wk" in interval.lower():
     delta = timedelta(weeks=window_momentum_L)
 elif "mo" in interval.lower():
-    # approx 30 jours par mois
+
     delta = timedelta(days=30 * window_momentum_L)
 elif "y" in interval.lower():
     delta = timedelta(days=365 * window_momentum_L)
@@ -75,9 +80,9 @@ if "d" in interval.lower():  # DAILY / BUSINESS DAILY
 else:
     start_analysis = start_display - delta
 
-print(f"Fenêtre d'analyse ajustée automatiquement : au lieu de {start_display.date()} : {start_analysis.date()} → {end_display.date()}")
+print(f"Analysis window automatically adjusted from {start_display.date()} to {start_analysis.date()} → {end_display.date()}")
 
-# --- Téléchargement avec fenêtre étendue
+
 df = yf.download(
     tickers= tickers,
     start=start_analysis,
@@ -87,7 +92,7 @@ df = yf.download(
     progress=False
 )
 
-# --- Fusion & sauvegarde parquet
+
 data = {}
 for ticker in tickers:
     df_ticker = df[ticker].copy()
@@ -96,7 +101,7 @@ for ticker in tickers:
 
 df_all = pd.concat(data.values())
 
-# --- Réalignement temporel selon les vraies dates du DataFrame
+
 idx = df_all.index.unique().sort_values()
 
 start_display_real = idx[idx.get_indexer([start_display], method="nearest")[0]]
@@ -106,28 +111,29 @@ end_display_real   = idx[idx.get_indexer([end_display],   method="nearest")[0]]
 
 df_all.attrs["start_display"] = str(start_display_real.date())
 df_all.attrs["end_display"] = str(end_display_real.date())
-df_all.to_parquet("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/sectors.parquet")
-df_all.to_csv("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/sectors.csv")
+df_all.to_parquet(os.path.join(OUTPUT_DIR, "sectors.parquet"))
+df_all.to_csv(os.path.join(OUTPUT_DIR, "sectors.csv"))
 print(df_all.isna().mean().sort_values(ascending=False) * 100)
-print(f"✅ Données téléchargées ({len(df_all)} lignes) avec extension automatique pour les indicateurs LT.")
-# --- Vérification finale des fenêtres utilisées
-print("\n🧭 Vérification des fenêtres avant sauvegarde @     :")
-print(f"   📈 Fenêtre d’analyse choisie : {start_analysis.date()} → {end_display.date()}")
-print(f"   👁️  Fenêtre d’observation réelle (Yahoo) : {df_all.attrs['start_display']} → {df_all.attrs['end_display']}")
-print(f"   🧮 Intervalle utilisé : {interval}")
-print(f"   💾 Fichier parquet sauvegardé avec {len(df_all):,} lignes\n")
+print(f"✅ Data downloaded ({len(df_all)} lines) with automatic extension for LT indicators.")
+
+print("\n🧭 Verification of analysis windows before saving:")
+print(f"   📈 Analysis windows chosen : {start_analysis.date()} → {end_display.date()}")
+print(f"   👁️ Actual observation window (Yahoo): {df_all.attrs['start_display']} → {df_all.attrs['end_display']}")
+print(f"   🧮 Frequency used: {interval}")
+print(f"   💾  Parquet file saved with {len(df_all):,} lines\n")
+
 # ============================================================
 # 2️⃣ Volatility profiles (long vs short term) — yfinance-driven
 # ============================================================
 
-# ---------- Paramètres ----------
-LOOKBACK_FULL = "1y"   # historique pour vol LT
-SHORT_DAYS    = 63     # ~3 mois (21 j × 3) pour vol CT
-MIN_OBS       = 30     # minimum d'observations pour considérer les vols "utilisables"
+# ---------- settings ----------
+LOOKBACK_FULL = "1y"   # historic for volatility LT
+SHORT_DAYS    = 63     # ~3 months (21 d × 3) for vol CT
+MIN_OBS       = 30     
 
 # ---------- Utilitaires ----------
 def _to_scalar(x):
-    """Convertit en float scalaire si possible, sinon NaN."""
+    """Convert float in  scalar if possible."""
     try:
         if isinstance(x, (pd.Series, pd.DataFrame, np.ndarray)):
             x = np.array(x).squeeze()
@@ -146,7 +152,7 @@ def _now_iso():
 # ---------- Snapshot yfinance (type, mcap, adv10, beta, nom) ----------
 def get_asset_snapshot(ticker: str):
     """
-    Récupère depuis yfinance:
+    fetch from yfinance:
       - quoteType / market → Asset_Type
       - marketCap
       - averageDailyVolume10Day (ADV10)
@@ -163,7 +169,7 @@ def get_asset_snapshot(ticker: str):
     try:
         t = yf.Ticker(ticker)
 
-        # .info contient beta, marketCap, averageDailyVolume10Day, quoteType, market, shortName/longName
+        # .info keeps beta, marketCap, averageDailyVolume10Day, quoteType, market, shortName/longName
         info = {}
         try:
             info = t.info or {}
@@ -203,7 +209,7 @@ def get_asset_snapshot(ticker: str):
         short_name = str(info.get("shortName", "") or "")
         long_name  = str(info.get("longName", "") or "")
 
-        # Si ADV10 absent → fallback calculé (moyenne $ sur 10 jours)
+        # If ADV10 absent → fallback (mean $ in 10 days)
         if not np.isfinite(adv10):
             try:
                 hist = yf.download(ticker, period="30d", interval="1d",
@@ -215,7 +221,7 @@ def get_asset_snapshot(ticker: str):
                 pass
 
     except Exception:
-        # on laisse les NaN / unknown
+
         pass
 
     return {
@@ -244,10 +250,10 @@ def name_forex(t):
         return t[:-2]
     return t
 
-# ---------- Volatilités CT/LT (prix 1d, auto_adjust pour éviter les ruptures) ----------
+
 def compute_vols_from_single_download(ticker: str):
     """
-    Renvoie:
+    Creates:
       - vol_long (% ann.)
       - vol_short (% ann.)
       - obs_full (# ret)
@@ -273,8 +279,8 @@ def compute_vols_from_single_download(ticker: str):
     except Exception:
         return np.nan, np.nan, 0, 0
 
-# ---------- Classifications qualitatives ----------
-# Seuils profil de volatilité selon Asset Type
+# ---------- Qualitative Classifications ----------
+
 VOL_THRESHOLDS = {
     "index":     [10, 20, 30],
     "etf":       [10, 20, 30],
@@ -288,13 +294,13 @@ VOL_THRESHOLDS = {
     "unknown":   [15, 25, 35],
 }
 BENCHMARKS = {
-    "stock": "SPY",          # actions US → marché global
-    "etf": "SPY",            # ETF sectoriels → marché global
-    "crypto": "BTC-USD",     # crypto → Bitcoin comme proxy du marché crypto
-    "commodity": "DBC",      # matières premières → ETF broad commodity
-    "bond": "IEF",           # obligations → Treasury 7-10Y
-    "forex": "UUP",          # dollar index ETF
-    "index": "SPY",          # indices généraux → benchmark global
+    "stock": "SPY",         
+    "etf": "SPY",          
+    "crypto": "BTC-USD",  
+    "commodity": "DBC",   
+    "bond": "IEF",      
+    "forex": "UUP",     
+    "index": "SPY",    
     "mutual_fund": "SPY",
     "fund": "SPY",
     "unknown": None
@@ -366,7 +372,7 @@ def classify_liquidity(adv10_usd: float, market_cap_label: str = None) -> str:
         else: return "very_liquid"
 
     else:
-        # fallback générique si MarketCap inconnu
+        # fallback if MarketCap unknown
         if adv10_usd < 1e6:
             return "illiquid"
         elif adv10_usd < 2e7:
@@ -392,9 +398,6 @@ def classify_beta(beta: float) -> str:
         return "very_high-beta"
 
 def detect_leverage(asset_type: str, short_name: str, long_name: str) -> str:
-    """
-    Détection simple d'ETF levier via le nom (heuristique).
-    """
     text = f"{short_name} {long_name}".lower()
     if asset_type == "etf" and any(k in text for k in ["2x", "3x", "ultra", "ultrapro", "leveraged", "x2", "x3"]):
         return "levered"
@@ -402,7 +405,6 @@ def detect_leverage(asset_type: str, short_name: str, long_name: str) -> str:
 
 
 def compute_beta_proxy(ticker: str, benchmark: str, period="1y") -> float:
-    """Calcule le bêta du ticker vs. un benchmark sur une période donnée."""
     try:
         if benchmark is None:
             return np.nan
@@ -425,10 +427,9 @@ def compute_beta_proxy(ticker: str, benchmark: str, period="1y") -> float:
 
     except Exception:
         return np.nan
-# ---------- Construction du parquet ----------
+
 records = []
 for ticker in tqdm(tickers, desc="Building volatility profiles (yfinance)"):
-    # 1) snapshot infos
     snap = get_asset_snapshot(ticker)
     asset_type = snap["asset_type"]
     mcap = snap["market_cap"]
@@ -441,13 +442,11 @@ for ticker in tqdm(tickers, desc="Building volatility profiles (yfinance)"):
         benchmark = BENCHMARKS[asset_type]
         beta = compute_beta_proxy(ticker, benchmark)
 
-    # 2) vols CT/LT
     vol_long, vol_short, obs_full, obs_short = compute_vols_from_single_download(ticker)
     vol_ratio = np.nan
     if np.isfinite(vol_long) and vol_long > 0 and np.isfinite(vol_short):
         vol_ratio = round(vol_short / vol_long, 3)
 
-    # 3) étiquettes
     market_cap_label = classify_market_cap(mcap)
     liquidity_label  = classify_liquidity(adv10, market_cap_label)
     profile          = classify_profile(vol_long, asset_type)
@@ -455,7 +454,6 @@ for ticker in tqdm(tickers, desc="Building volatility profiles (yfinance)"):
     usable           = (liquidity_label in {"liquid", "very_liquid"})
 
 
-    # 4) enregistrement
     records.append({
         "Ticker": name_forex(ticker),
         "Asset_Type": asset_type,
@@ -481,11 +479,17 @@ for ticker in tqdm(tickers, desc="Building volatility profiles (yfinance)"):
     
 df_profiles = pd.DataFrame(records)
 
-df_profiles.to_parquet("/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/vol_profiles.parquet",index=False)
+
+df_profiles.to_parquet(
+    os.path.join(OUTPUT_DIR, "vol_profiles.parquet"),
+    index=False
+)
+
+
 print(df_profiles.isna().mean().sort_values(ascending=False) * 100)
 
 
 df_profiles.to_csv(
-    "/Users/benjaminvissac/Documents/GitHub/factor-rotation/data/processed/vol_profiles.csv",
+    os.path.join(OUTPUT_DIR, "vol_profiles.csv"),
     index=False
 )
