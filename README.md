@@ -1,3 +1,7 @@
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![License](https://img.shields.io/badge/License-Apache_2.0-green)
+![Last Commit](https://img.shields.io/github/last-commit/benjaminkhelifa/factor-rotation)
+
 # **Portfolio Rotation Engine**
 **Dynamic Cross-Asset Analysis • Multi-Frequency Signals • Automated Financial Reporting (PDF)**
 
