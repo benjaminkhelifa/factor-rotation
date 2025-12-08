@@ -98,7 +98,7 @@ factor-rotation/
 ├─ tests/             # (Reserved) future unit tests
 ├─ requirements.txt
 └─ README.md
-
+```
 ---
 
 ## How to Run the Project
@@ -193,7 +193,7 @@ flowchart TD
     D --> E[Scenario Engine\nConsistency checks]
     E --> F[Report Builder\n(PDF with charts & diagnostics)]
 ---
-
+```
 ## **Tools & Libraries**
 
 - Python 3.10+
