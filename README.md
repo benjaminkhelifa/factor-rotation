@@ -185,6 +185,68 @@ report/outputs/
 - Fully automated analytical PDF reports
 - Stress tests & backtests under multiple scenarios
 
+## Validation & Stress Testing
+
+To ensure that the engine is not only functional but **reliable under real-world market conditions**,  
+I conducted a structured campaign of **32 backtests across 26 distinct scenarios**.
+
+These scenarios included:
+
+- high-volatility periods  
+- low-liquidity environments  
+- structural breaks and macro shocks  
+- incomplete or irregular datasets  
+- noise-injected price series  
+- abnormal momentum reversals and outliers  
+
+The goal was not to “optimize performance,” but to **validate system resilience**:
+
+- indicators remain stable across heterogeneous market conditions  
+- volatility and momentum regimes behave coherently even with noisy inputs  
+- fallback logic correctly handles missing or inconsistent data  
+- the PDF generator stays structurally sound regardless of scenario quality  
+- rotations and signals maintain interpretability under stress  
+
+This testing phase ensured the engine behaves consistently and predictably when market data does *not*.
+
+### Full Backtest Summary (30 pages)
+
+If you want a deeper look at the methodology, the scenarios, and the conclusions,  
+you can read the complete technical report here:
+
+👉 EN — **[Download Backtest Review (PDF)](<report/Backtest/EN_Backtest Summary.pdf>)**
+👉 FR —  **[Téléchargez le compte rendu backtest (PDF)](<report/Backtest/FR_Backtest Summary.pdf>)**
+
+
+This document details:
+
+- scenario design  
+- validation methodology  
+- robustness checks  
+- anomalies encountered & how the engine handled them  
+- insights on indicator stability  
+- limitations and possible improvements  
+
+It serves as the formal technical backbone of the project.
+
+## How to Read & Interpret the Report
+
+For full transparency and reproducibility, the project includes a
+23-page appendix detailing:
+	•	all indicator formulas (Return, Volatility, Momentum, RAR, ratios…)
+	•	dynamic window system (frequency-aware calibration)
+	•	scenario logic (13 CT configurations)
+	•	volatility regime classification
+	•	scaling factors by asset class
+	•	glossary of all technical terms
+	•	interpretation methodology for each table, chart, and regime
+
+This annex explains exactly how to read the generated PDF reports and
+how every diagnostic is computed and interpreted.
+
+👉 Download the Annex (PDF):
+EN — **[Annex — How to read the report (PDF)](<report/EN_Annex_How_to_read .pdf>)**
+FR —  **[Annexe comment lire le rapport (PDF)](<report/FR_Annex_How_to_read.pdf>)**
 
 ## Example Outputs
 
