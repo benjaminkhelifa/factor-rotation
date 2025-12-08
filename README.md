@@ -215,6 +215,7 @@ If you want a deeper look at the methodology, the scenarios, and the conclusions
 you can read the complete technical report here:
 
 👉 EN — **[Download Backtest Review (PDF)](<report/Backtest/EN_Backtest Summary.pdf>)**
+
 👉 FR —  **[Téléchargez le compte rendu backtest (PDF)](<report/Backtest/FR_Backtest Summary.pdf>)**
 
 
@@ -245,7 +246,9 @@ This annex explains exactly how to read the generated PDF reports and
 how every diagnostic is computed and interpreted.
 
 👉 Download the Annex (PDF):
+
 EN — **[Annex — How to read the report (PDF)](<report/EN_Annex_How_to_read .pdf>)**
+
 FR —  **[Annexe comment lire le rapport (PDF)](<report/FR_Annex_How_to_read.pdf>)**
 
 ## Example Outputs
