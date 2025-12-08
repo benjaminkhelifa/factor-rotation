@@ -1,7 +1,7 @@
 Ticker,Asset_Type,Market_Cap,Market_Cap_Label,ADV10_USD,Liquidity_Label,Usable,Leverage_Label,Beta,Beta_Label,Volatility_Profile,Regime,Volatility_Long(%),Volatility_Short(%),Volatility_Ratio,Obs_Full,Obs_Short,AsOf
-XLK,etf,40095612928.0,large,16334780.0,thin,False,unlevered,1.32,high-beta,dynamic,normal,27.49,20.77,0.756,249,63,2025-12-08
-XLF,etf,47167127552.0,large,36841420.0,thin,False,unlevered,0.83,market,balanced,subdued,19.36,13.61,0.703,249,63,2025-12-08
-XLE,etf,8462717440.0,mid,28613930.0,liquid,True,unlevered,0.8,market,dynamic,subdued,24.84,17.19,0.692,249,63,2025-12-08
-XLY,etf,14173019136.0,large,10198080.0,thin,False,unlevered,1.14,market,dynamic,normal,24.75,19.31,0.78,249,63,2025-12-08
-XLV,etf,29941934080.0,large,15045130.0,thin,False,unlevered,0.48,defensive,balanced,normal,17.41,14.92,0.857,249,63,2025-12-08
-XLI,etf,21070460928.0,large,10801040.0,thin,False,unlevered,0.87,market,balanced,subdued,18.89,12.93,0.684,249,63,2025-12-08
+XLK,etf,40022159360.0,large,16334780.0,thin,False,unlevered,1.32,high-beta,dynamic,normal,27.49,20.76,0.755,249,63,2025-12-08
+XLF,etf,47233388544.0,large,36841420.0,thin,False,unlevered,0.83,market,balanced,subdued,19.36,13.59,0.702,249,63,2025-12-08
+XLE,etf,8466446336.0,mid,28613930.0,liquid,True,unlevered,0.8,market,dynamic,subdued,24.84,17.18,0.692,249,63,2025-12-08
+XLY,etf,14174221312.0,large,10198080.0,thin,False,unlevered,1.14,market,dynamic,normal,24.75,19.31,0.78,249,63,2025-12-08
+XLV,etf,29893568512.0,large,15045130.0,thin,False,unlevered,0.48,defensive,balanced,normal,17.42,14.98,0.86,249,63,2025-12-08
+XLI,etf,21080025088.0,large,10801040.0,thin,False,unlevered,0.87,market,balanced,subdued,18.89,12.92,0.684,249,63,2025-12-08

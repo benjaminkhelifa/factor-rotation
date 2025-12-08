@@ -20,7 +20,7 @@ tickers = [
     "XLV",   # Health Care Select Sector SPDR Fund
     "XLI",   # Industrial Select Sector SPDR Fund
     ]
-start_display = pd.Timestamp("2025-09-15")
+start_display = pd.Timestamp("2025-09-01")
 end_display   = pd.Timestamp("2025-12-01")
 interval = "1D"
 
