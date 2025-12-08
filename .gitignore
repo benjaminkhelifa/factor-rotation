@@ -1,0 +1,17 @@
+# Virtual envs
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS junk
+.DS_Store
+
+# Generated data
+data/processed/
+
+# Generated reports
+report/outputs/
